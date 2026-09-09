@@ -11,6 +11,7 @@ import java.util.concurrent.TimeUnit
 
 class WebSocketClient(
     private val serverUrl: String = "ws://10.0.2.2:8080/chat",
+    private val username: String = "Anonymous",
     private val onMessageReceived: (Message) -> Unit,
     private val onConnectionStateChanged: (Boolean) -> Unit
 ) {
@@ -23,8 +24,9 @@ class WebSocketClient(
     private var shouldReconnect = true
 
     fun connect() {
+        val url = "$serverUrl?username=$username"
         val request = Request.Builder()
-            .url(serverUrl)
+            .url(url)
             .build()
 
         webSocket = client.newWebSocket(request, object : WebSocketListener() {

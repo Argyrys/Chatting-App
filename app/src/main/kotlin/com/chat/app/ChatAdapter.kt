@@ -5,9 +5,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
+import java.util.concurrent.TimeUnit
 
 class ChatAdapter(
     private val messages: List<Message>,
@@ -37,8 +35,9 @@ class ChatAdapter(
 
     override fun getItemViewType(position: Int): Int {
         val message = messages[position]
-        return when (message.type) {
-            "CHAT" -> if (message.from == currentUsername) VIEW_TYPE_SENT else VIEW_TYPE_RECEIVED
+        return when {
+            message.type == "CHAT" && message.from == currentUsername -> VIEW_TYPE_SENT
+            message.type == "CHAT" -> VIEW_TYPE_RECEIVED
             else -> VIEW_TYPE_SYSTEM
         }
     }
@@ -60,8 +59,7 @@ class ChatAdapter(
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         val message = messages[position]
-        val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
-        val timeString = timeFormat.format(Date(message.timestamp))
+        val timeString = getRelativeTime(message.timestamp)
 
         when (holder) {
             is SentViewHolder -> {
@@ -75,8 +73,14 @@ class ChatAdapter(
             }
             is SystemViewHolder -> {
                 val text = when (message.type) {
-                    "JOIN" -> "${message.from} joined the chat"
-                    "LEAVE" -> "${message.from} left the chat"
+                    "JOIN" -> {
+                        if (message.from == "SERVER") "${message.content}"
+                        else "${message.from} joined the chat"
+                    }
+                    "LEAVE" -> {
+                        if (message.from == "SERVER") "${message.content}"
+                        else "${message.from} left the chat"
+                    }
                     else -> message.content
                 }
                 holder.tvMessage.text = text
@@ -85,4 +89,17 @@ class ChatAdapter(
     }
 
     override fun getItemCount(): Int = messages.size
+
+    private fun getRelativeTime(timestamp: Long): String {
+        val now = System.currentTimeMillis()
+        val diff = now - timestamp
+
+        return when {
+            diff < TimeUnit.SECONDS.toMillis(1) -> "now"
+            diff < TimeUnit.MINUTES.toMillis(1) -> "${ TimeUnit.MILLISECONDS.toSeconds(diff)}s"
+            diff < TimeUnit.HOURS.toMillis(1) -> "${TimeUnit.MILLISECONDS.toMinutes(diff)}m"
+            diff < TimeUnit.DAYS.toMillis(1) -> "${TimeUnit.MILLISECONDS.toHours(diff)}h"
+            else -> "${TimeUnit.MILLISECONDS.toDays(diff)}d"
+        }
+    }
 }
