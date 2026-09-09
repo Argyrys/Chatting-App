@@ -10,6 +10,7 @@ import org.json.JSONObject
 import java.util.concurrent.TimeUnit
 
 class WebSocketClient(
+    private val serverUrl: String = "ws://10.0.2.2:8080/chat",
     private val onMessageReceived: (Message) -> Unit,
     private val onConnectionStateChanged: (Boolean) -> Unit
 ) {
@@ -23,7 +24,7 @@ class WebSocketClient(
 
     fun connect() {
         val request = Request.Builder()
-            .url("ws://10.0.2.2:8080/chat")
+            .url(serverUrl)
             .build()
 
         webSocket = client.newWebSocket(request, object : WebSocketListener() {

@@ -20,8 +20,9 @@ class ChatViewModel : ViewModel() {
         _username.value = name
     }
 
-    fun connect() {
+    fun connect(serverUrl: String = "ws://10.0.2.2:8080/chat") {
         webSocketClient = WebSocketClient(
+            serverUrl = serverUrl,
             onMessageReceived = { message ->
                 val currentMessages = _messages.value ?: mutableListOf()
                 currentMessages.add(message)
@@ -29,6 +30,9 @@ class ChatViewModel : ViewModel() {
             },
             onConnectionStateChanged = { connected ->
                 _isConnected.postValue(connected)
+                if (connected) {
+                    sendJoin()
+                }
             }
         )
         webSocketClient?.connect()
@@ -40,10 +44,6 @@ class ChatViewModel : ViewModel() {
 
         val message = Message.chat(user, content)
         webSocketClient?.sendMessage(message)
-
-        val currentMessages = _messages.value ?: mutableListOf()
-        currentMessages.add(message)
-        _messages.value = currentMessages
     }
 
     fun sendJoin() {

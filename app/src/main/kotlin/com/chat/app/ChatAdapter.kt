@@ -12,7 +12,7 @@ import java.util.Locale
 class ChatAdapter(
     private val messages: List<Message>,
     private val currentUsername: String
-) : RecyclerView.Adapter<ChatAdapter.MessageViewHolder>() {
+) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     companion object {
         private const val VIEW_TYPE_SENT = 1
@@ -20,9 +20,19 @@ class ChatAdapter(
         private const val VIEW_TYPE_SYSTEM = 3
     }
 
-    class MessageViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-        val tvContent: TextView = view.findViewById(android.R.id.text1)
-        val tvTimestamp: TextView = view.findViewById(android.R.id.text2)
+    class SentViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+        val tvContent: TextView = view.findViewById(R.id.tvMessageContent)
+        val tvTimestamp: TextView = view.findViewById(R.id.tvTimestamp)
+    }
+
+    class ReceivedViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+        val tvSender: TextView = view.findViewById(R.id.tvSenderName)
+        val tvContent: TextView = view.findViewById(R.id.tvMessageContent)
+        val tvTimestamp: TextView = view.findViewById(R.id.tvTimestamp)
+    }
+
+    class SystemViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+        val tvMessage: TextView = view.findViewById(R.id.tvSystemMessage)
     }
 
     override fun getItemViewType(position: Int): Int {
@@ -33,47 +43,43 @@ class ChatAdapter(
         }
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MessageViewHolder {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
+        val inflater = LayoutInflater.from(parent.context)
         return when (viewType) {
-            VIEW_TYPE_SENT -> {
-                val view = LayoutInflater.from(parent.context)
-                    .inflate(android.R.layout.simple_list_item_2, parent, false)
-                MessageViewHolder(view)
-            }
-            VIEW_TYPE_RECEIVED -> {
-                val view = LayoutInflater.from(parent.context)
-                    .inflate(android.R.layout.simple_list_item_2, parent, false)
-                MessageViewHolder(view)
-            }
-            else -> {
-                val view = LayoutInflater.from(parent.context)
-                    .inflate(android.R.layout.simple_list_item_1, parent, false)
-                MessageViewHolder(view)
-            }
+            VIEW_TYPE_SENT -> SentViewHolder(
+                inflater.inflate(R.layout.item_message_sent, parent, false)
+            )
+            VIEW_TYPE_RECEIVED -> ReceivedViewHolder(
+                inflater.inflate(R.layout.item_message_received, parent, false)
+            )
+            else -> SystemViewHolder(
+                inflater.inflate(R.layout.item_message_system, parent, false)
+            )
         }
     }
 
-    override fun onBindViewHolder(holder: MessageViewHolder, position: Int) {
+    override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         val message = messages[position]
-        val timeFormat = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
+        val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
         val timeString = timeFormat.format(Date(message.timestamp))
 
-        when (message.type) {
-            "CHAT" -> {
-                val prefix = if (message.from == currentUsername) "You" else message.from
-                holder.tvContent.text = "$prefix: ${message.content}"
+        when (holder) {
+            is SentViewHolder -> {
+                holder.tvContent.text = message.content
                 holder.tvTimestamp.text = timeString
-                holder.tvTimestamp.visibility = View.VISIBLE
             }
-            "JOIN" -> {
-                holder.tvContent.text = "${message.from} joined the chat"
-                holder.tvContent.alpha = 0.6f
-                holder.tvTimestamp.visibility = View.GONE
+            is ReceivedViewHolder -> {
+                holder.tvSender.text = message.from
+                holder.tvContent.text = message.content
+                holder.tvTimestamp.text = timeString
             }
-            "LEAVE" -> {
-                holder.tvContent.text = "${message.from} left the chat"
-                holder.tvContent.alpha = 0.6f
-                holder.tvTimestamp.visibility = View.GONE
+            is SystemViewHolder -> {
+                val text = when (message.type) {
+                    "JOIN" -> "${message.from} joined the chat"
+                    "LEAVE" -> "${message.from} left the chat"
+                    else -> message.content
+                }
+                holder.tvMessage.text = text
             }
         }
     }

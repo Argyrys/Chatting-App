@@ -29,7 +29,9 @@ class MainActivity : AppCompatActivity() {
         val btnSend = findViewById<Button>(R.id.btnSend)
 
         chatAdapter = ChatAdapter(emptyList(), "")
-        rvMessages.layoutManager = LinearLayoutManager(this)
+        rvMessages.layoutManager = LinearLayoutManager(this).apply {
+            stackFromEnd = true
+        }
         rvMessages.adapter = chatAdapter
 
         btnJoin.setOnClickListener {
@@ -66,7 +68,14 @@ class MainActivity : AppCompatActivity() {
 
         viewModel.isConnected.observe(this) { connected ->
             tvStatus.text = if (connected) "Connected" else "Disconnected"
+            tvStatus.setTextColor(
+                if (connected) 0xFF4CAF50.toInt() else 0xFFF44336.toInt()
+            )
             btnSend.isEnabled = connected && hasJoined
+
+            if (!connected && hasJoined) {
+                Toast.makeText(this, "Connection lost. Reconnecting...", Toast.LENGTH_SHORT).show()
+            }
         }
     }
 
