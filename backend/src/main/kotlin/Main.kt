@@ -8,6 +8,9 @@ import io.ktor.server.routing.*
 import io.ktor.serialization.kotlinx.json.*
 import kotlinx.serialization.json.Json
 import ChatModule.configureWebSockets
+import io.ktor.http.*
+import io.ktor.http.content.*
+import java.io.File
 
 fun main() {
     embeddedServer(Netty, port = 8080, host = "0.0.0.0") {
@@ -46,6 +49,28 @@ fun main() {
                     return@get
                 }
                 call.respond(mapOf("users" to UserStore.getOnlineUsers()))
+            }
+
+            post("/upload") {
+                val token = call.request.queryParameters["token"] ?: ""
+                val loginId = UserStore.validateToken(token)
+                if (loginId == null) {
+                    call.respond(mapOf("success" to "false", "error" to "Invalid token"))
+                    return@post
+                }
+
+                val result = FileStorage.uploadFile(call)
+                call.respond(result)
+            }
+
+            get("/uploads/{fileName}") {
+                val fileName = call.parameters["fileName"] ?: return@get
+                val file = FileStorage.getFilePath(fileName)
+                if (file != null) {
+                    call.respondFile(file)
+                } else {
+                    call.respond(HttpStatusCode.NotFound, "File not found")
+                }
             }
         }
 

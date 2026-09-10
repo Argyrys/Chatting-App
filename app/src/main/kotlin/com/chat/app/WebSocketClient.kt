@@ -54,7 +54,11 @@ class WebSocketClient(
                         type = type,
                         from = json.getString("from"),
                         content = json.getString("content"),
-                        timestamp = json.getLong("timestamp")
+                        timestamp = json.getLong("timestamp"),
+                        messageType = json.optString("messageType", "TEXT"),
+                        fileUrl = json.optString("fileUrl", ""),
+                        fileName = json.optString("fileName", ""),
+                        fileSize = json.optLong("fileSize", 0)
                     )
                     onMessageReceived(message)
                 } catch (e: Exception) {
@@ -93,6 +97,10 @@ class WebSocketClient(
             put("from", message.from)
             put("content", message.content)
             put("timestamp", message.timestamp)
+            put("messageType", message.messageType)
+            put("fileUrl", message.fileUrl)
+            put("fileName", message.fileName)
+            put("fileSize", message.fileSize)
         }
         webSocket?.send(json.toString())
     }

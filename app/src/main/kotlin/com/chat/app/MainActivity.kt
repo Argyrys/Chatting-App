@@ -1,10 +1,13 @@
 package com.chat.app
 
+import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
 import android.widget.EditText
+import android.widget.ImageButton
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -16,6 +19,15 @@ class MainActivity : AppCompatActivity() {
     private var hasJoined = false
     private var token = ""
     private var displayName = ""
+
+    private val filePickerLauncher = registerForActivityResult(
+        ActivityResultContracts.GetContent()
+    ) { uri ->
+        uri?.let {
+            viewModel.sendMedia(it)
+            Toast.makeText(this, "Uploading file...", Toast.LENGTH_SHORT).show()
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -36,6 +48,7 @@ class MainActivity : AppCompatActivity() {
         val tvWelcome = findViewById<TextView>(R.id.tvWelcome)
         val etMessage = findViewById<EditText>(R.id.etMessage)
         val btnSend = findViewById<Button>(R.id.btnSend)
+        val btnAttach = findViewById<ImageButton>(R.id.btnAttach)
         val rvMessages = findViewById<RecyclerView>(R.id.rvMessages)
 
         tvWelcome.text = "Welcome, $displayName!"
@@ -51,6 +64,10 @@ class MainActivity : AppCompatActivity() {
             if (message.isEmpty()) return@setOnClickListener
             viewModel.sendMessage(message)
             etMessage.text.clear()
+        }
+
+        btnAttach.setOnClickListener {
+            showFileChooser()
         }
 
         viewModel.messages.observe(this) { messages ->
@@ -69,8 +86,32 @@ class MainActivity : AppCompatActivity() {
             btnSend.isEnabled = connected
         }
 
+        viewModel.error.observe(this) { errorMsg ->
+            errorMsg?.let {
+                Toast.makeText(this, it, Toast.LENGTH_LONG).show()
+                viewModel.clearError()
+            }
+        }
+
         viewModel.connectWithToken(token)
         hasJoined = true
+    }
+
+    private fun showFileChooser() {
+        val intent = Intent(Intent.ACTION_GET_CONTENT).apply {
+            type = "*/*"
+            addCategory(Intent.CATEGORY_OPENABLE)
+            putExtra(Intent.EXTRA_MIME_TYPES, arrayOf(
+                "image/*",
+                "video/*",
+                "audio/*",
+                "application/pdf",
+                "application/msword",
+                "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                "text/*"
+            ))
+        }
+        filePickerLauncher.launch("*/*")
     }
 
     override fun onDestroy() {
