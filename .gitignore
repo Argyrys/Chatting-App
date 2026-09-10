@@ -9,3 +9,9 @@
 .cxx
 local.properties
 /app/build
+/backend/build
+/server.log
+gradlew
+gradlew.bat
+/backend/gradlew.bat
+/backend/gradle/wrapper/gradle-wrapper.jar

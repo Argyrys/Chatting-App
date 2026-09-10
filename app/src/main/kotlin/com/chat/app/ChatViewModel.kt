@@ -11,38 +11,47 @@ class ChatViewModel : ViewModel() {
     private val _isConnected = MutableLiveData(false)
     val isConnected: LiveData<Boolean> = _isConnected
 
-    private val _username = MutableLiveData("")
-    val username: LiveData<String> = _username
+    private val _error = MutableLiveData<String?>()
+    val error: LiveData<String?> = _error
 
     private var webSocketClient: WebSocketClient? = null
 
-    fun setUsername(name: String) {
-        _username.value = name
-    }
+    fun connectWithToken(token: String, serverUrl: String = "ws://10.0.2.2:8080/chat") {
+        webSocketClient?.disconnect()
 
-    fun connect(serverUrl: String = "ws://10.0.2.2:8080/chat") {
-        val user = _username.value ?: return
         webSocketClient = WebSocketClient(
             serverUrl = serverUrl,
-            username = user,
+            token = token,
             onMessageReceived = { message ->
-                val currentMessages = _messages.value ?: mutableListOf()
-                currentMessages.add(message)
-                _messages.postValue(currentMessages)
+                synchronized(this) {
+                    val currentMessages = _messages.value ?: mutableListOf()
+                    currentMessages.add(message)
+                    _messages.postValue(ArrayList(currentMessages))
+                }
             },
             onConnectionStateChanged = { connected ->
                 _isConnected.postValue(connected)
+            },
+            onError = { errorMsg ->
+                _error.postValue(errorMsg)
             }
         )
         webSocketClient?.connect()
     }
 
     fun sendMessage(content: String) {
-        val user = _username.value ?: return
         if (content.isBlank()) return
 
-        val message = Message.chat(user, content)
+        val message = Message.chat("", content)
         webSocketClient?.sendMessage(message)
+    }
+
+    fun clearError() {
+        _error.value = null
+    }
+
+    fun disconnect() {
+        webSocketClient?.disconnect()
     }
 
     override fun onCleared() {

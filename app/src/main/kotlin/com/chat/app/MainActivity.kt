@@ -14,52 +14,47 @@ class MainActivity : AppCompatActivity() {
     private lateinit var viewModel: ChatViewModel
     private lateinit var chatAdapter: ChatAdapter
     private var hasJoined = false
+    private var token = ""
+    private var displayName = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        token = intent.getStringExtra("token") ?: ""
+        displayName = intent.getStringExtra("displayName") ?: ""
+
+        if (token.isEmpty()) {
+            Toast.makeText(this, "Not authenticated", Toast.LENGTH_SHORT).show()
+            finish()
+            return
+        }
+
         viewModel = ViewModelProvider(this)[ChatViewModel::class.java]
 
         val tvStatus = findViewById<TextView>(R.id.tvStatus)
-        val etUsername = findViewById<EditText>(R.id.etUsername)
-        val btnJoin = findViewById<Button>(R.id.btnJoin)
-        val rvMessages = findViewById<RecyclerView>(R.id.rvMessages)
+        val tvWelcome = findViewById<TextView>(R.id.tvWelcome)
         val etMessage = findViewById<EditText>(R.id.etMessage)
         val btnSend = findViewById<Button>(R.id.btnSend)
+        val rvMessages = findViewById<RecyclerView>(R.id.rvMessages)
 
-        chatAdapter = ChatAdapter(emptyList(), "")
+        tvWelcome.text = "Welcome, $displayName!"
+
+        chatAdapter = ChatAdapter(emptyList(), displayName)
         rvMessages.layoutManager = LinearLayoutManager(this).apply {
             stackFromEnd = true
         }
         rvMessages.adapter = chatAdapter
 
-        btnJoin.setOnClickListener {
-            val username = etUsername.text.toString().trim()
-            if (username.isEmpty()) {
-                Toast.makeText(this, "Please enter a username", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
-            viewModel.setUsername(username)
-            viewModel.connect()
-            hasJoined = true
-            etUsername.isEnabled = false
-            btnJoin.isEnabled = false
-            etMessage.requestFocus()
-        }
-
         btnSend.setOnClickListener {
             val message = etMessage.text.toString().trim()
-            if (!hasJoined) {
-                Toast.makeText(this, "Please join the chat first", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
+            if (message.isEmpty()) return@setOnClickListener
             viewModel.sendMessage(message)
             etMessage.text.clear()
         }
 
         viewModel.messages.observe(this) { messages ->
-            chatAdapter = ChatAdapter(messages, viewModel.username.value ?: "")
+            chatAdapter = ChatAdapter(messages, displayName)
             rvMessages.adapter = chatAdapter
             if (messages.isNotEmpty()) {
                 rvMessages.scrollToPosition(messages.size - 1)
@@ -71,15 +66,17 @@ class MainActivity : AppCompatActivity() {
             tvStatus.setTextColor(
                 if (connected) 0xFF4CAF50.toInt() else 0xFFF44336.toInt()
             )
-            btnSend.isEnabled = connected && hasJoined
-
-            if (!connected && hasJoined) {
-                Toast.makeText(this, "Connection lost. Reconnecting...", Toast.LENGTH_SHORT).show()
-            }
+            btnSend.isEnabled = connected
         }
+
+        viewModel.connectWithToken(token)
+        hasJoined = true
     }
 
     override fun onDestroy() {
         super.onDestroy()
+        if (hasJoined) {
+            viewModel.disconnect()
+        }
     }
 }
