@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="whatsapp_primary">#128C7E</color>
+    <color name="whatsapp_primary_dark">#075E54</color>
+    <color name="whatsapp_accent">#25D366</color>
+    <color name="chat_background">#E7DED6</color>
+    <color name="input_background">#FFFFFF</color>
+    <color name="sent_message">#D9FDD3</color>
+    <color name="received_message">#FFFFFF</color>
+    <color name="system_message">#D9D2CA</color>
+    <color name="text_primary">#1F2C34</color>
+    <color name="text_secondary">#667781</color>
+    <color name="connected">#25D366</color>
+    <color name="disconnected">#FFCDD2</color>
+</resources>
