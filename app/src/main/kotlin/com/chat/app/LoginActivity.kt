@@ -19,13 +19,14 @@ class LoginActivity : AppCompatActivity() {
     private lateinit var etLoginId: EditText
     private lateinit var etPassword: EditText
     private lateinit var etDisplayName: EditText
+    private lateinit var etServerAddress: EditText
     private lateinit var btnLogin: Button
     private lateinit var btnRegister: Button
     private lateinit var tvStatus: TextView
     private lateinit var tvDisplayNameLabel: TextView
 
     private var isRegisterMode = false
-    private val serverUrl = "http://192.168.1.2:8080"
+    private var serverUrl = "http://192.168.1.2:8080"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -34,6 +35,7 @@ class LoginActivity : AppCompatActivity() {
         etLoginId = findViewById(R.id.etLoginId)
         etPassword = findViewById(R.id.etPassword)
         etDisplayName = findViewById(R.id.etDisplayName)
+        etServerAddress = findViewById(R.id.etServerAddress)
 
         tvDisplayNameLabel = findViewById(R.id.tvDisplayNameLabel)
 
@@ -42,6 +44,11 @@ class LoginActivity : AppCompatActivity() {
         tvStatus = findViewById(R.id.tvStatus)
 
         btnLogin.setOnClickListener {
+
+            val address = etServerAddress.text.toString().trim()
+            if (address.isNotEmpty()) {
+                serverUrl = "http://$address:8080"
+            }
 
             val loginId = etLoginId.text.toString().trim()
             val password = etPassword.text.toString().trim()
@@ -174,6 +181,11 @@ class LoginActivity : AppCompatActivity() {
                                 putExtra(
                                     "sharedKey",
                                     "chat-app-shared-key-2024"
+                                )
+
+                                putExtra(
+                                    "serverAddress",
+                                    serverUrl
                                 )
                             }
 
@@ -327,6 +339,11 @@ class LoginActivity : AppCompatActivity() {
                                 putExtra(
                                     "sharedKey",
                                     "chat-app-shared-key-2024"
+                                )
+
+                                putExtra(
+                                    "serverAddress",
+                                    serverUrl
                                 )
                             }
 

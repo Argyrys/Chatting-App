@@ -61,6 +61,8 @@ class MainActivity : AppCompatActivity() {
         val sharedKey = intent.getStringExtra("sharedKey") ?: "chat-app-shared-key-2024"
         EncryptionUtils.setSharedKey(sharedKey)
 
+        val serverAddress = intent.getStringExtra("serverAddress") ?: "http://192.168.1.2:8080"
+
         requestNotificationPermission()
         saveAuthToken(token)
 
@@ -343,7 +345,8 @@ class MainActivity : AppCompatActivity() {
         // Connect
         // -----------------------------
 
-        viewModel.connectWithToken(token, displayName)
+        val wsUrl = serverAddress.replace("http://", "ws://").replace("https://", "wss://") + "/chat"
+        viewModel.connectWithToken(token, displayName, wsUrl)
 
         hasJoined = true
     }

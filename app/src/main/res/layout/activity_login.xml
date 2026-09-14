@@ -22,7 +22,7 @@
             android:layout_height="76dp"
             android:gravity="center"
             android:background="@color/whatsapp_accent"
-            android:text="C"
+            android:text="H"
             android:textColor="@color/white"
             android:textSize="32sp"
             android:textStyle="bold"
@@ -65,10 +65,36 @@
                 android:orientation="vertical"
                 android:padding="24dp">
 
+                <!-- Server Address Label -->
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Server Address"
+                    android:textColor="@color/header_background"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+
+                <!-- Server Address -->
+                <EditText
+                    android:id="@+id/etServerAddress"
+                    android:layout_width="match_parent"
+                    android:layout_height="52dp"
+                    android:layout_marginTop="6dp"
+                    android:background="@drawable/bg_input_field"
+                    android:hint="e.g. 192.168.1.100"
+                    android:inputType="textUri"
+                    android:paddingStart="16dp"
+                    android:paddingEnd="16dp"
+                    android:textColor="@color/text_primary"
+                    android:textColorHint="@color/hint_color"
+                    android:textSize="15sp"
+                    android:text="192.168.1.2" />
+
                 <!-- Login ID Label -->
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_marginTop="18dp"
                     android:text="Login ID"
                     android:textColor="@color/header_background"
                     android:textSize="14sp"
