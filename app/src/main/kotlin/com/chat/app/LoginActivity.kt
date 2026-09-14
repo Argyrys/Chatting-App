@@ -169,6 +169,11 @@ class LoginActivity : AppCompatActivity() {
                                     "loginId",
                                     loginId
                                 )
+
+                                putExtra(
+                                    "sharedKey",
+                                    "chat-app-shared-key-2024"
+                                )
                             }
 
                         startActivity(intent)
@@ -316,6 +321,11 @@ class LoginActivity : AppCompatActivity() {
                                 putExtra(
                                     "loginId",
                                     loginId
+                                )
+
+                                putExtra(
+                                    "sharedKey",
+                                    "chat-app-shared-key-2024"
                                 )
                             }
 

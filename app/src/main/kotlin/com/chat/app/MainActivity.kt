@@ -16,6 +16,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.chat.app.crypto.EncryptionUtils
 import com.google.android.material.button.MaterialButton
 
 class MainActivity : AppCompatActivity() {
@@ -52,6 +53,9 @@ class MainActivity : AppCompatActivity() {
 
         token = intent.getStringExtra("token") ?: ""
         displayName = intent.getStringExtra("displayName") ?: ""
+
+        val sharedKey = intent.getStringExtra("sharedKey") ?: "chat-app-shared-key-2024"
+        EncryptionUtils.setSharedKey(sharedKey)
 
         if (token.isEmpty()) {
 

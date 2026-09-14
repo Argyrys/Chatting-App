@@ -5,8 +5,15 @@ import android.net.Uri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import com.chat.app.db.AppDatabase
+import com.chat.app.db.MessageEntity
+import kotlinx.coroutines.*
 
 class ChatViewModel(application: Application) : AndroidViewModel(application) {
+
+    private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+    private val db = AppDatabase.getDatabase(application)
+    private val messageDao = db.messageDao()
 
     private val _messages =
         MutableLiveData<MutableList<Message>>(mutableListOf())
@@ -53,11 +60,28 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
         fileUploader =
             FileUploader(getApplication())
 
+        loadCachedMessages()
+
         webSocketClient = WebSocketClient(
             serverUrl = serverUrl,
             token = token,
 
             onMessageReceived = { message ->
+
+                scope.launch {
+                    val entity = MessageEntity(
+                        serverId = message.id,
+                        type = message.type,
+                        from = message.from,
+                        content = message.content,
+                        timestamp = message.timestamp,
+                        messageType = message.messageType,
+                        fileUrl = message.fileUrl,
+                        fileName = message.fileName,
+                        fileSize = message.fileSize
+                    )
+                    messageDao.insertMessage(entity)
+                }
 
                 synchronized(this) {
 
@@ -100,6 +124,11 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
 
             onMessageDeleted = { messageIdStr ->
                 val messageId = messageIdStr.toIntOrNull() ?: return@WebSocketClient
+
+                scope.launch {
+                    messageDao.markDeleted(messageId)
+                }
+
                 synchronized(this) {
                     val currentMessages = _messages.value ?: mutableListOf()
                     val updatedMessages = currentMessages.map { msg ->
@@ -116,6 +145,11 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                 if (parts.size == 2) {
                     val messageId = parts[0].toIntOrNull() ?: return@WebSocketClient
                     val newContent = parts[1]
+
+                    scope.launch {
+                        messageDao.updateContent(messageId, newContent)
+                    }
+
                     synchronized(this) {
                         val currentMessages = _messages.value ?: mutableListOf()
                         val updatedMessages = currentMessages.map { msg ->
@@ -141,6 +175,28 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
         )
 
         webSocketClient?.connect()
+    }
+
+    private fun loadCachedMessages() {
+        scope.launch {
+            val cached = messageDao.getRecentMessages()
+            if (cached.isNotEmpty()) {
+                val messageList = cached.map { entity ->
+                    Message(
+                        type = entity.type,
+                        from = entity.from,
+                        content = entity.content,
+                        timestamp = entity.timestamp,
+                        messageType = entity.messageType,
+                        fileUrl = entity.fileUrl,
+                        fileName = entity.fileName,
+                        fileSize = entity.fileSize,
+                        id = entity.serverId
+                    )
+                }.toMutableList()
+                _messages.postValue(ArrayList(messageList))
+            }
+        }
     }
 
     fun sendMessage(content: String) {
@@ -236,6 +292,7 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
 
     override fun onCleared() {
 
+        scope.cancel()
         webSocketClient?.disconnect()
 
         webSocketClient = null

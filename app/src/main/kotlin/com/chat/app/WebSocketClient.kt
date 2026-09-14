@@ -1,5 +1,6 @@
 package com.chat.app
 
+import com.chat.app.crypto.EncryptionUtils
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
@@ -193,6 +194,11 @@ class WebSocketClient(
                         return
                     }
 
+                    val rawContent = json.optString("content", "")
+                    val content = if (type == "CHAT" && EncryptionUtils.isEncrypted(rawContent)) {
+                        EncryptionUtils.decrypt(rawContent)
+                    } else rawContent
+
                     val message =
                         Message(
                             type = type,
@@ -202,10 +208,7 @@ class WebSocketClient(
                                 ""
                             ),
 
-                            content = json.optString(
-                                "content",
-                                ""
-                            ),
+                            content = content,
 
                             timestamp = json.optLong(
                                 "timestamp",
@@ -332,9 +335,15 @@ class WebSocketClient(
                         message.from
                     )
 
+                    val encryptedContent = if (message.type == "CHAT") {
+                        EncryptionUtils.encrypt(message.content)
+                    } else {
+                        message.content
+                    }
+
                     put(
                         "content",
-                        message.content
+                        encryptedContent
                     )
 
                     put(
