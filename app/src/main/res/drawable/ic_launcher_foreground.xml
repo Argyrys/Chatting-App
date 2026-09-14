@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Background circle -->
+    <path
+        android:fillColor="#4CAF50"
+        android:pathData="M54,54m-50,0a50,50 0,1 1,100 0a50,50 0,1 1,-100 0" />
+
+    <!-- Letter H -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M38,30L38,78L44,78L44,58L64,58L64,78L70,78L70,30L64,30L64,52L44,52L44,30Z" />
+
+    <!-- Speech bubble tail -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M35,72L28,82L42,75Z" />
+</vector>
