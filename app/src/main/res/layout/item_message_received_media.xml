@@ -17,7 +17,7 @@
         android:layout_height="wrap_content"
         android:textSize="12sp"
         android:textStyle="bold"
-        android:textColor="#1E88E5"
+        android:textColor="@color/link_color"
         android:layout_marginBottom="4dp" />
 
     <ImageView
@@ -26,14 +26,15 @@
         android:layout_height="200dp"
         android:scaleType="centerCrop"
         android:visibility="gone"
-        android:layout_marginBottom="4dp" />
+        android:layout_marginBottom="4dp"
+        android:contentDescription="Media attachment" />
 
     <TextView
         android:id="@+id/tvFileName"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textSize="14sp"
-        android:textColor="#333333"
+        android:textColor="@color/media_label"
         android:visibility="gone"
         android:drawablePadding="4dp"
         android:layout_marginBottom="4dp" />
@@ -43,7 +44,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textSize="16sp"
-        android:textColor="#333333"
+        android:textColor="@color/media_label"
         android:visibility="gone" />
 
     <TextView
@@ -51,6 +52,6 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textSize="11sp"
-        android:textColor="#999999"
+        android:textColor="@color/media_label_light"
         android:layout_gravity="end" />
 </LinearLayout>

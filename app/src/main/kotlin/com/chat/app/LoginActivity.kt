@@ -8,6 +8,7 @@ import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import org.json.JSONObject
 import java.io.OutputStreamWriter
 import java.net.HttpURLConnection
@@ -89,7 +90,7 @@ class LoginActivity : AppCompatActivity() {
     private fun login(loginId: String, password: String) {
 
         tvStatus.text = "Logging in..."
-        tvStatus.setTextColor(0xFF666666.toInt())
+        tvStatus.setTextColor(ContextCompat.getColor(this, R.color.text_secondary))
 
         Thread {
 
@@ -183,7 +184,7 @@ class LoginActivity : AppCompatActivity() {
 
                         tvStatus.text = message
                         tvStatus.setTextColor(
-                            0xFFF44336.toInt()
+                            ContextCompat.getColor(this@LoginActivity, R.color.disconnected)
                         )
                     }
                 }
@@ -196,7 +197,7 @@ class LoginActivity : AppCompatActivity() {
                         "Connection error: ${e.message}"
 
                     tvStatus.setTextColor(
-                        0xFFF44336.toInt()
+                        ContextCompat.getColor(this@LoginActivity, R.color.disconnected)
                     )
                 }
             }
@@ -224,7 +225,7 @@ class LoginActivity : AppCompatActivity() {
         }
 
         tvStatus.text = "Registering..."
-        tvStatus.setTextColor(0xFF666666.toInt())
+        tvStatus.setTextColor(ContextCompat.getColor(this, R.color.text_secondary))
 
         Thread {
 
@@ -350,7 +351,7 @@ class LoginActivity : AppCompatActivity() {
                         "Connection error: ${e.message}"
 
                     tvStatus.setTextColor(
-                        0xFFF44336.toInt()
+                        ContextCompat.getColor(this@LoginActivity, R.color.disconnected)
                     )
                 }
             }

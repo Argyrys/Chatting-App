@@ -13,7 +13,7 @@
         android:orientation="horizontal"
         android:paddingStart="12dp"
         android:paddingEnd="12dp"
-        android:background="@color/whatsapp_primary_dark"
+        android:background="@color/header_background"
         android:gravity="center_vertical">
 
         <TextView
@@ -23,9 +23,10 @@
             android:gravity="center"
             android:background="@drawable/bg_avatar"
             android:text="C"
-            android:textColor="#FFFFFF"
+            android:textColor="@color/white"
             android:textSize="19sp"
-            android:textStyle="bold" />
+            android:textStyle="bold"
+            android:contentDescription="User avatar" />
 
         <LinearLayout
             android:layout_width="0dp"
@@ -39,7 +40,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Chat"
-                android:textColor="#FFFFFF"
+                android:textColor="@color/white"
                 android:textSize="17sp"
                 android:textStyle="bold"
                 android:maxLines="1"
@@ -50,7 +51,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Connecting..."
-                android:textColor="#D7F7EF"
+                android:textColor="@color/white"
                 android:textSize="12sp"
                 android:layout_marginTop="2dp" />
         </LinearLayout>
@@ -90,7 +91,7 @@
         android:paddingEnd="8dp"
         android:paddingTop="7dp"
         android:paddingBottom="7dp"
-        android:background="#F0F2F5"
+        android:background="@color/input_bar_background"
         android:gravity="center_vertical">
 
         <ImageButton
@@ -98,7 +99,7 @@
             android:layout_width="46dp"
             android:layout_height="46dp"
             android:src="@android:drawable/ic_menu_add"
-            android:tint="#6B7280"
+            android:tint="@color/text_secondary"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="Attach file"
             android:padding="10dp"
@@ -111,10 +112,10 @@
             android:layout_weight="1"
             android:hint="Type a message"
             android:textColor="@color/text_primary"
-            android:textColorHint="#8A969D"
+            android:textColorHint="@color/hint_color"
             android:textSize="15sp"
-            android:inputType="textCapSentences|textMultiLine"
-            android:singleLine="true"
+            android:inputType="textCapSentences"
+            android:maxLines="1"
             android:imeOptions="actionSend"
             android:background="@drawable/bg_input_field"
             android:paddingStart="16dp"
@@ -129,7 +130,7 @@
             android:layout_marginStart="7dp"
             android:text="➤"
             android:textSize="19sp"
-            android:textColor="#FFFFFF"
+            android:textColor="@color/white"
             android:minWidth="0dp"
             android:minHeight="0dp"
             android:padding="0dp"

@@ -310,9 +310,9 @@ class MainActivity : AppCompatActivity() {
 
             tvStatus.setTextColor(
                 if (connected) {
-                    0xFF25D366.toInt()
+                    ContextCompat.getColor(this, R.color.connected)
                 } else {
-                    0xFFFFCDD2.toInt()
+                    ContextCompat.getColor(this, R.color.disconnected)
                 }
             )
 
