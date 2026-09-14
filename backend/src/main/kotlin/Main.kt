@@ -15,6 +15,10 @@ import java.io.File
 fun main() {
     DatabaseFactory.init()
 
+    val serviceAccountPath = System.getenv("FIREBASE_SERVICE_ACCOUNT")
+        ?: "firebase-service-account.json"
+    NotificationService.init(serviceAccountPath)
+
     embeddedServer(Netty, port = 8080, host = "0.0.0.0") {
         install(ContentNegotiation) {
             json(Json {

@@ -24,6 +24,8 @@ dependencies {
     implementation("ch.qos.logback:logback-classic:1.4.8")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.0")
     implementation("org.xerial:sqlite-jdbc:3.43.0.0")
+    implementation("com.auth0:java-jwt:4.4.0")
+    implementation("com.google.code.gson:gson:2.10.1")
 }
 
 application {

@@ -16,3 +16,4 @@ gradlew.bat
 /backend/gradlew.bat
 /backend/gradle/wrapper/gradle-wrapper.jar
 /app/google-services.json
+/backend/firebase-service-account.json
