@@ -4,8 +4,11 @@ import android.graphics.BitmapFactory
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.EditText
 import android.widget.ImageView
+import android.widget.PopupMenu
 import android.widget.TextView
+import androidx.appcompat.app.AlertDialog
 import androidx.recyclerview.widget.RecyclerView
 import java.net.HttpURLConnection
 import java.net.URL
@@ -13,7 +16,8 @@ import java.util.concurrent.TimeUnit
 
 class ChatAdapter(
     private val messages: List<Message>,
-    private val currentUsername: String
+    private val currentUsername: String,
+    private val onMessageAction: ((String, Message) -> Unit)? = null
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     companion object {
@@ -190,6 +194,8 @@ class ChatAdapter(
 
                 holder.tvTimestamp.text =
                     timeString
+
+                setupLongPress(holder.itemView, message, true)
             }
 
             is ReceivedTextViewHolder -> {
@@ -216,6 +222,8 @@ class ChatAdapter(
                     message,
                     baseUrl
                 )
+
+                setupLongPress(holder.itemView, message, true)
             }
 
             is ReceivedMediaViewHolder -> {
@@ -257,6 +265,59 @@ class ChatAdapter(
                 holder.tvMessage.text = text
             }
         }
+    }
+
+    private fun setupLongPress(itemView: View, message: Message, isOwn: Boolean) {
+        if (!isOwn || message.id <= 0) return
+
+        itemView.setOnLongClickListener { view ->
+            val popup = PopupMenu(view.context, view)
+            popup.menu.add(0, 1, 0, "Edit")
+            popup.menu.add(0, 2, 0, "Delete")
+
+            popup.setOnMenuItemClickListener { menuItem ->
+                when (menuItem.itemId) {
+                    1 -> {
+                        showEditDialog(itemView, message)
+                        true
+                    }
+                    2 -> {
+                        AlertDialog.Builder(view.context)
+                            .setTitle("Delete Message")
+                            .setMessage("Are you sure you want to delete this message?")
+                            .setPositiveButton("Delete") { _, _ ->
+                                onMessageAction?.invoke("DELETE", message)
+                            }
+                            .setNegativeButton("Cancel", null)
+                            .show()
+                        true
+                    }
+                    else -> false
+                }
+            }
+            popup.show()
+            true
+        }
+    }
+
+    private fun showEditDialog(itemView: View, message: Message) {
+        val context = itemView.context
+        val editText = EditText(context).apply {
+            setText(message.content)
+            setSelection(message.content.length)
+        }
+
+        AlertDialog.Builder(context)
+            .setTitle("Edit Message")
+            .setView(editText)
+            .setPositiveButton("Save") { _, _ ->
+                val newContent = editText.text.toString().trim()
+                if (newContent.isNotEmpty() && newContent != message.content) {
+                    onMessageAction?.invoke("EDIT", message.copy(content = newContent))
+                }
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
     }
 
     private fun bindMedia(

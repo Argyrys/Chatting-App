@@ -23,17 +23,30 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
 
     val error: LiveData<String?> = _error
 
+    private val _onlineUsers =
+        MutableLiveData<MutableList<String>>(mutableListOf())
+
+    val onlineUsers: LiveData<MutableList<String>> = _onlineUsers
+
+    private val _typingUsers =
+        MutableLiveData<MutableSet<String>>(mutableSetOf())
+
+    val typingUsers: LiveData<MutableSet<String>> = _typingUsers
+
     private var webSocketClient: WebSocketClient? = null
     private var fileUploader: FileUploader? = null
 
     private var token = ""
+    private var currentUserName = ""
 
     fun connectWithToken(
         token: String,
+        userName: String = "",
         serverUrl: String = "ws://10.0.2.2:8080/chat"
     ) {
 
         this.token = token
+        this.currentUserName = userName
 
         webSocketClient?.disconnect()
 
@@ -67,6 +80,63 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
             onError = { errorMsg ->
 
                 _error.postValue(errorMsg)
+            },
+
+            onOnlineUsers = { users ->
+                _onlineUsers.postValue(ArrayList(users))
+            },
+
+            onUserTyping = { userName ->
+                val current = _typingUsers.value?.toMutableSet() ?: mutableSetOf()
+                current.add(userName)
+                _typingUsers.postValue(current)
+            },
+
+            onUserStopTyping = { userName ->
+                val current = _typingUsers.value?.toMutableSet() ?: mutableSetOf()
+                current.remove(userName)
+                _typingUsers.postValue(current)
+            },
+
+            onMessageDeleted = { messageIdStr ->
+                val messageId = messageIdStr.toIntOrNull() ?: return@WebSocketClient
+                synchronized(this) {
+                    val currentMessages = _messages.value ?: mutableListOf()
+                    val updatedMessages = currentMessages.map { msg ->
+                        if (msg.id == messageId) {
+                            msg.copy(content = "This message was deleted", id = 0)
+                        } else msg
+                    }.toMutableList()
+                    _messages.postValue(ArrayList(updatedMessages))
+                }
+            },
+
+            onMessageEdited = { content ->
+                val parts = content.split("|", limit = 2)
+                if (parts.size == 2) {
+                    val messageId = parts[0].toIntOrNull() ?: return@WebSocketClient
+                    val newContent = parts[1]
+                    synchronized(this) {
+                        val currentMessages = _messages.value ?: mutableListOf()
+                        val updatedMessages = currentMessages.map { msg ->
+                            if (msg.id == messageId) {
+                                msg.copy(content = newContent)
+                            } else msg
+                        }.toMutableList()
+                        _messages.postValue(ArrayList(updatedMessages))
+                    }
+                }
+            },
+
+            onSystemMessage = { message ->
+                synchronized(this) {
+                    val currentMessages =
+                        _messages.value ?: mutableListOf()
+                    currentMessages.add(message)
+                    _messages.postValue(
+                        ArrayList(currentMessages)
+                    )
+                }
             }
         )
 
@@ -91,6 +161,27 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
             )
 
         webSocketClient?.sendMessage(message)
+    }
+
+    fun deleteMessage(messageId: Int) {
+        if (_isConnected.value != true) return
+        webSocketClient?.sendDeleteMessage(messageId)
+    }
+
+    fun editMessage(messageId: Int, newContent: String) {
+        if (_isConnected.value != true) return
+        if (newContent.isBlank()) return
+        webSocketClient?.sendEditMessage(messageId, newContent)
+    }
+
+    fun sendTyping() {
+        if (_isConnected.value != true) return
+        webSocketClient?.sendTyping()
+    }
+
+    fun sendStopTyping() {
+        if (_isConnected.value != true) return
+        webSocketClient?.sendStopTyping()
     }
 
     fun sendMedia(

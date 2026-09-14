@@ -6,8 +6,10 @@ data class Message(
     val from: String,
     val content: String,
     val timestamp: Long = System.currentTimeMillis(),
-    val messageType: String = "TEXT", // TEXT, IMAGE, VIDEO, FILE, AUDIO
+    val messageType: String = "TEXT",
     val fileUrl: String = "",
     val fileName: String = "",
-    val fileSize: Long = 0
+    val fileSize: Long = 0,
+    val replyToId: Int? = null,
+    val id: Int? = null
 )

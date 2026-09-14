@@ -9,8 +9,9 @@ import kotlinx.serialization.serializer
 import java.util.concurrent.ConcurrentHashMap
 
 object ChatModule {
-    private val connections = ConcurrentHashMap<String, WebSocketSession>() // displayName -> session
-    private val tokenConnections = ConcurrentHashMap<String, String>() // token -> displayName
+    private val connections = ConcurrentHashMap<String, WebSocketSession>()
+    private val tokenConnections = ConcurrentHashMap<String, String>()
+    private val typingUsers = ConcurrentHashMap<String, Long>()
     private val json = Json { ignoreUnknownKeys = true }
 
     fun Application.configureWebSockets() {
@@ -43,6 +44,8 @@ object ChatModule {
                 connections[displayName] = this
                 tokenConnections[token] = displayName
 
+                UserStore.updateLastSeen(loginId)
+                broadcastOnlineUsers()
                 println("User connected: $displayName ($loginId) (${connections.size} online)")
 
                 broadcastSystemMessage("JOIN", "$displayName joined the chat")
@@ -54,8 +57,44 @@ object ChatModule {
                             try {
                                 val message = json.decodeFromString(serializer<Message>(), text)
                                 val chatMessage = message.copy(from = displayName)
-                                broadcast(chatMessage)
-                                println("[$displayName]: ${message.content}")
+
+                                when (chatMessage.type) {
+                                    "CHAT" -> {
+                                        val savedId = MessageStore.saveMessage(chatMessage)
+                                        broadcast(chatMessage.copy(timestamp = System.currentTimeMillis()))
+                                        println("[$displayName]: ${chatMessage.content}")
+                                    }
+                                    "DELETE" -> {
+                                        val messageId = chatMessage.content.toIntOrNull()
+                                        if (messageId != null) {
+                                            val success = MessageStore.deleteMessage(messageId, displayName)
+                                            if (success) {
+                                                broadcastSystemMessage("DELETE", messageId.toString())
+                                            }
+                                        }
+                                    }
+                                    "EDIT" -> {
+                                        val parts = chatMessage.content.split("|", limit = 2)
+                                        if (parts.size == 2) {
+                                            val messageId = parts[0].toIntOrNull()
+                                            val newContent = parts[1]
+                                            if (messageId != null) {
+                                                val success = MessageStore.editMessage(messageId, displayName, newContent)
+                                                if (success) {
+                                                    broadcastSystemMessage("EDIT", chatMessage.content)
+                                                }
+                                            }
+                                        }
+                                    }
+                                    "TYPING" -> {
+                                        typingUsers[displayName] = System.currentTimeMillis()
+                                        broadcastTypingStatus(displayName, true)
+                                    }
+                                    "STOP_TYPING" -> {
+                                        typingUsers.remove(displayName)
+                                        broadcastTypingStatus(displayName, false)
+                                    }
+                                }
                             } catch (e: Exception) {
                                 println("Invalid message from $displayName: $text")
                             }
@@ -66,11 +105,26 @@ object ChatModule {
                 } finally {
                     connections.remove(displayName)
                     tokenConnections.remove(token)
+                    typingUsers.remove(displayName)
+                    UserStore.updateLastSeen(loginId)
+                    broadcastOnlineUsers()
                     broadcastSystemMessage("LEAVE", "$displayName left the chat")
                     println("User disconnected: $displayName (${connections.size} online)")
                 }
             }
         }
+    }
+
+    private suspend fun broadcastOnlineUsers() {
+        val onlineList = connections.keys.toList()
+        val message = Message("ONLINE_USERS", "SERVER", onlineList.joinToString(","))
+        broadcast(message)
+    }
+
+    private suspend fun broadcastTypingStatus(userName: String, isTyping: Boolean) {
+        val type = if (isTyping) "USER_TYPING" else "USER_STOP_TYPING"
+        val message = Message(type, "SERVER", userName)
+        broadcast(message)
     }
 
     private suspend fun broadcastSystemMessage(type: String, content: String) {

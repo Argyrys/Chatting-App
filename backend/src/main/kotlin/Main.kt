@@ -13,6 +13,8 @@ import io.ktor.http.content.*
 import java.io.File
 
 fun main() {
+    DatabaseFactory.init()
+
     embeddedServer(Netty, port = 8080, host = "0.0.0.0") {
         install(ContentNegotiation) {
             json(Json {
@@ -49,6 +51,52 @@ fun main() {
                     return@get
                 }
                 call.respond(mapOf("users" to UserStore.getOnlineUsers()))
+            }
+
+            get("/messages") {
+                val token = call.request.queryParameters["token"] ?: ""
+                val loginId = UserStore.validateToken(token)
+                if (loginId == null) {
+                    call.respond(mapOf("error" to "Invalid token"))
+                    return@get
+                }
+                val limit = call.request.queryParameters["limit"]?.toIntOrNull() ?: 50
+                val messages = MessageStore.getRecentMessages(limit)
+                call.respond(mapOf("messages" to messages))
+            }
+
+            delete("/messages/{id}") {
+                val token = call.request.queryParameters["token"] ?: ""
+                val loginId = UserStore.validateToken(token)
+                if (loginId == null) {
+                    call.respond(mapOf("success" to false, "error" to "Invalid token"))
+                    return@delete
+                }
+                val messageId = call.parameters["id"]?.toIntOrNull()
+                if (messageId == null) {
+                    call.respond(mapOf("success" to false, "error" to "Invalid message ID"))
+                    return@delete
+                }
+                val success = MessageStore.deleteMessage(messageId, loginId)
+                call.respond(mapOf("success" to success))
+            }
+
+            put("/messages/{id}") {
+                val token = call.request.queryParameters["token"] ?: ""
+                val loginId = UserStore.validateToken(token)
+                if (loginId == null) {
+                    call.respond(mapOf("success" to false, "error" to "Invalid token"))
+                    return@put
+                }
+                val messageId = call.parameters["id"]?.toIntOrNull()
+                if (messageId == null) {
+                    call.respond(mapOf("success" to false, "error" to "Invalid message ID"))
+                    return@put
+                }
+                val request = call.receive<Map<String, String>>()
+                val newContent = request["content"] ?: ""
+                val success = MessageStore.editMessage(messageId, loginId, newContent)
+                call.respond(mapOf("success" to success))
             }
 
             post("/upload") {

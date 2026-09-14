@@ -2,6 +2,10 @@ package com.chat.app
 
 import android.content.Intent
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
+import android.text.Editable
+import android.text.TextWatcher
 import android.view.inputmethod.EditorInfo
 import android.widget.EditText
 import android.widget.ImageButton
@@ -22,6 +26,9 @@ class MainActivity : AppCompatActivity() {
     private var hasJoined = false
     private var token = ""
     private var displayName = ""
+
+    private val typingHandler = Handler(Looper.getMainLooper())
+    private var isTyping = false
 
     private val filePickerLauncher = registerForActivityResult(
         ActivityResultContracts.GetContent()
@@ -103,7 +110,16 @@ class MainActivity : AppCompatActivity() {
         // -----------------------------
 
         chatAdapter =
-            ChatAdapter(emptyList(), displayName)
+            ChatAdapter(emptyList(), displayName) { action, message ->
+                when (action) {
+                    "DELETE" -> {
+                        viewModel.deleteMessage(message.id)
+                    }
+                    "EDIT" -> {
+                        viewModel.editMessage(message.id, message.content)
+                    }
+                }
+            }
 
         rvMessages.layoutManager =
             LinearLayoutManager(this).apply {
@@ -140,6 +156,9 @@ class MainActivity : AppCompatActivity() {
             viewModel.sendMessage(message)
 
             etMessage.text.clear()
+
+            viewModel.sendStopTyping()
+            isTyping = false
         }
 
 
@@ -166,6 +185,38 @@ class MainActivity : AppCompatActivity() {
 
 
         // -----------------------------
+        // Typing Indicator
+        // -----------------------------
+
+        etMessage.addTextChangedListener(object : TextWatcher {
+            private var typingRunnable: Runnable? = null
+
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+
+            override fun afterTextChanged(s: Editable?) {
+                val text = s?.toString()?.trim() ?: ""
+
+                if (text.isNotEmpty() && !isTyping) {
+                    isTyping = true
+                    viewModel.sendTyping()
+                }
+
+                typingRunnable?.let { typingHandler.removeCallbacks(it) }
+
+                typingRunnable = Runnable {
+                    if (isTyping) {
+                        isTyping = false
+                        viewModel.sendStopTyping()
+                    }
+                }
+                typingHandler.postDelayed(typingRunnable!!, 2000)
+            }
+        })
+
+
+        // -----------------------------
         // Attach File
         // -----------------------------
 
@@ -181,7 +232,16 @@ class MainActivity : AppCompatActivity() {
         viewModel.messages.observe(this) { messages ->
 
             chatAdapter =
-                ChatAdapter(messages, displayName)
+                ChatAdapter(messages, displayName) { action, message ->
+                    when (action) {
+                        "DELETE" -> {
+                            viewModel.deleteMessage(message.id)
+                        }
+                        "EDIT" -> {
+                            viewModel.editMessage(message.id, message.content)
+                        }
+                    }
+                }
 
             rvMessages.adapter = chatAdapter
 
@@ -190,6 +250,36 @@ class MainActivity : AppCompatActivity() {
                 rvMessages.scrollToPosition(
                     messages.size - 1
                 )
+            }
+        }
+
+
+        // -----------------------------
+        // Typing Users Observer
+        // -----------------------------
+
+        val tvTypingIndicator = findViewById<TextView>(R.id.tvTypingIndicator)
+
+        viewModel.typingUsers.observe(this) { typingUsers ->
+
+            val typingNames = typingUsers.filter { it != displayName }
+
+            when {
+                typingNames.isEmpty() -> {
+                    tvTypingIndicator.visibility = android.view.View.GONE
+                }
+                typingNames.size == 1 -> {
+                    tvTypingIndicator.text = "${typingNames[0]} is typing..."
+                    tvTypingIndicator.visibility = android.view.View.VISIBLE
+                }
+                typingNames.size == 2 -> {
+                    tvTypingIndicator.text = "${typingNames[0]} and ${typingNames[1]} are typing..."
+                    tvTypingIndicator.visibility = android.view.View.VISIBLE
+                }
+                else -> {
+                    tvTypingIndicator.text = "${typingNames.size} people are typing..."
+                    tvTypingIndicator.visibility = android.view.View.VISIBLE
+                }
             }
         }
 
@@ -242,7 +332,7 @@ class MainActivity : AppCompatActivity() {
         // Connect
         // -----------------------------
 
-        viewModel.connectWithToken(token)
+        viewModel.connectWithToken(token, displayName)
 
         hasJoined = true
     }

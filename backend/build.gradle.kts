@@ -20,6 +20,7 @@ dependencies {
     implementation("io.ktor:ktor-serialization-kotlinx-json:2.3.0")
     implementation("ch.qos.logback:logback-classic:1.4.8")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.0")
+    implementation("org.xerial:sqlite-jdbc:3.43.0.0")
 }
 
 application {

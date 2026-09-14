@@ -8,7 +8,8 @@ data class Message(
     val messageType: String = "TEXT",
     val fileUrl: String = "",
     val fileName: String = "",
-    val fileSize: Long = 0
+    val fileSize: Long = 0,
+    val id: Int = 0
 ) {
     companion object {
         fun join(username: String) = Message(
@@ -40,6 +41,20 @@ data class Message(
             type = "LEAVE",
             from = username,
             content = "",
+            timestamp = System.currentTimeMillis()
+        )
+
+        fun delete(messageId: Int) = Message(
+            type = "DELETE",
+            from = "",
+            content = messageId.toString(),
+            timestamp = System.currentTimeMillis()
+        )
+
+        fun edit(messageId: Int, newContent: String) = Message(
+            type = "EDIT",
+            from = "",
+            content = "$messageId|$newContent",
             timestamp = System.currentTimeMillis()
         )
     }

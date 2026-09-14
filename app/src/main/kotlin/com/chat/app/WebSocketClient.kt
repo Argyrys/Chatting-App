@@ -15,7 +15,13 @@ class WebSocketClient(
     private val token: String,
     private val onMessageReceived: (Message) -> Unit,
     private val onConnectionStateChanged: (Boolean) -> Unit,
-    private val onError: ((String) -> Unit)? = null
+    private val onError: ((String) -> Unit)? = null,
+    private val onOnlineUsers: ((List<String>) -> Unit)? = null,
+    private val onUserTyping: ((String) -> Unit)? = null,
+    private val onUserStopTyping: ((String) -> Unit)? = null,
+    private val onMessageDeleted: ((String) -> Unit)? = null,
+    private val onMessageEdited: ((String) -> Unit)? = null,
+    private val onSystemMessage: ((Message) -> Unit)? = null
 ) {
 
     private val client = OkHttpClient.Builder()
@@ -121,6 +127,72 @@ class WebSocketClient(
                         return
                     }
 
+                    if (type == "ONLINE_USERS") {
+
+                        val usersStr = json.optString("content", "")
+                        val users = if (usersStr.isEmpty()) emptyList()
+                        else usersStr.split(", ")
+                        onOnlineUsers?.invoke(users)
+                        return
+                    }
+
+                    if (type == "USER_TYPING") {
+
+                        val userName = json.optString("content", "")
+                        onUserTyping?.invoke(userName)
+                        return
+                    }
+
+                    if (type == "USER_STOP_TYPING") {
+
+                        val userName = json.optString("content", "")
+                        onUserStopTyping?.invoke(userName)
+                        return
+                    }
+
+                    if (type == "DELETE") {
+
+                        val messageId = json.optString("content", "")
+                        onMessageDeleted?.invoke(messageId)
+                        onSystemMessage?.invoke(
+                            Message(
+                                type = "SYSTEM",
+                                from = "SERVER",
+                                content = "A message was deleted",
+                                timestamp = json.optLong("timestamp", System.currentTimeMillis())
+                            )
+                        )
+                        return
+                    }
+
+                    if (type == "EDIT") {
+
+                        val content = json.optString("content", "")
+                        onMessageEdited?.invoke(content)
+                        onSystemMessage?.invoke(
+                            Message(
+                                type = "SYSTEM",
+                                from = "SERVER",
+                                content = "A message was edited",
+                                timestamp = json.optLong("timestamp", System.currentTimeMillis())
+                            )
+                        )
+                        return
+                    }
+
+                    if (type == "JOIN" || type == "LEAVE" || type == "SYSTEM") {
+
+                        onSystemMessage?.invoke(
+                            Message(
+                                type = "SYSTEM",
+                                from = json.optString("from", "SERVER"),
+                                content = json.optString("content", ""),
+                                timestamp = json.optLong("timestamp", System.currentTimeMillis())
+                            )
+                        )
+                        return
+                    }
+
                     val message =
                         Message(
                             type = type,
@@ -158,7 +230,9 @@ class WebSocketClient(
                             fileSize = json.optLong(
                                 "fileSize",
                                 0
-                            )
+                            ),
+
+                            id = json.optInt("id", 0)
                         )
 
                     onMessageReceived(message)
@@ -307,6 +381,58 @@ class WebSocketClient(
                 "Send failed: ${e.message}"
             )
         }
+    }
+
+    fun sendTyping() {
+        if (!isConnected) return
+        try {
+            val json = JSONObject().apply {
+                put("type", "TYPING")
+                put("from", "")
+                put("content", "")
+                put("timestamp", System.currentTimeMillis())
+            }
+            webSocket?.send(json.toString())
+        } catch (_: Exception) {}
+    }
+
+    fun sendStopTyping() {
+        if (!isConnected) return
+        try {
+            val json = JSONObject().apply {
+                put("type", "STOP_TYPING")
+                put("from", "")
+                put("content", "")
+                put("timestamp", System.currentTimeMillis())
+            }
+            webSocket?.send(json.toString())
+        } catch (_: Exception) {}
+    }
+
+    fun sendDeleteMessage(messageId: Int) {
+        if (!isConnected) return
+        try {
+            val json = JSONObject().apply {
+                put("type", "DELETE")
+                put("from", "")
+                put("content", messageId.toString())
+                put("timestamp", System.currentTimeMillis())
+            }
+            webSocket?.send(json.toString())
+        } catch (_: Exception) {}
+    }
+
+    fun sendEditMessage(messageId: Int, newContent: String) {
+        if (!isConnected) return
+        try {
+            val json = JSONObject().apply {
+                put("type", "EDIT")
+                put("from", "")
+                put("content", "$messageId|$newContent")
+                put("timestamp", System.currentTimeMillis())
+            }
+            webSocket?.send(json.toString())
+        } catch (_: Exception) {}
     }
 
     fun disconnect() {
