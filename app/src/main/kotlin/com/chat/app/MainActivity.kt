@@ -1,6 +1,8 @@
 package com.chat.app
 
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -13,6 +15,8 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -56,6 +60,9 @@ class MainActivity : AppCompatActivity() {
 
         val sharedKey = intent.getStringExtra("sharedKey") ?: "chat-app-shared-key-2024"
         EncryptionUtils.setSharedKey(sharedKey)
+
+        requestNotificationPermission()
+        saveAuthToken(token)
 
         if (token.isEmpty()) {
 
@@ -339,6 +346,27 @@ class MainActivity : AppCompatActivity() {
         viewModel.connectWithToken(token, displayName)
 
         hasJoined = true
+    }
+
+    private fun requestNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.POST_NOTIFICATIONS)
+                != PackageManager.PERMISSION_GRANTED
+            ) {
+                ActivityCompat.requestPermissions(
+                    this,
+                    arrayOf(android.Manifest.permission.POST_NOTIFICATIONS),
+                    1001
+                )
+            }
+        }
+    }
+
+    private fun saveAuthToken(token: String) {
+        getSharedPreferences("chat_prefs", MODE_PRIVATE)
+            .edit()
+            .putString("auth_token", token)
+            .apply()
     }
 
 

@@ -41,6 +41,14 @@ object DatabaseFactory {
                         created_at INTEGER NOT NULL DEFAULT 0
                     )
                 """)
+                stmt.executeUpdate("""
+                    CREATE TABLE IF NOT EXISTS fcm_tokens (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        user_id TEXT NOT NULL,
+                        fcm_token TEXT NOT NULL UNIQUE,
+                        created_at INTEGER NOT NULL DEFAULT 0
+                    )
+                """)
             }
         }
         println("Database initialized")

@@ -120,6 +120,23 @@ fun main() {
                     call.respond(HttpStatusCode.NotFound, "File not found")
                 }
             }
+
+            post("/fcm/token") {
+                val token = call.request.queryParameters["token"] ?: ""
+                val loginId = UserStore.validateToken(token)
+                if (loginId == null) {
+                    call.respond(mapOf("success" to false, "error" to "Invalid token"))
+                    return@post
+                }
+                val request = call.receive<Map<String, String>>()
+                val fcmToken = request["fcmToken"]
+                if (fcmToken.isNullOrEmpty()) {
+                    call.respond(mapOf("success" to false, "error" to "Missing FCM token"))
+                    return@post
+                }
+                NotificationService.storeFcmToken(loginId, fcmToken)
+                call.respond(mapOf("success" to true))
+            }
         }
 
         configureWebSockets()

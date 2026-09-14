@@ -143,5 +143,25 @@ object ChatModule {
                 println("Failed to send to a client: ${e.message}")
             }
         }
+
+        if (message.type == "CHAT") {
+            val serverKey = System.getenv("FCM_SERVER_KEY") ?: ""
+            if (serverKey.isNotEmpty()) {
+                val onlineUsers = connections.keys.toList()
+                val allUsers = UserStore.getOnlineUsers()
+                val offlineUsers = allUsers.filter { it !in onlineUsers }
+
+                for (offlineUser in offlineUsers) {
+                    NotificationService.sendNotificationToUser(
+                        userId = offlineUser,
+                        title = "New message from ${message.from}",
+                        body = message.content,
+                        from = message.from,
+                        type = "CHAT",
+                        serverKey = serverKey
+                    )
+                }
+            }
+        }
     }
 }
