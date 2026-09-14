@@ -32,7 +32,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="18dp"
-            android:text="Chat App"
+            android:text="HeyaWorld"
             android:textColor="#075E54"
             android:textSize="30sp"
             android:textStyle="bold" />
