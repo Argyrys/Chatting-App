@@ -12,7 +12,7 @@ import java.net.URLEncoder
 import java.util.concurrent.TimeUnit
 
 class WebSocketClient(
-    private val serverUrl: String = "ws://10.0.2.2:8080/chat",
+    private val serverUrl: String = "ws://192.168.1.2:8080/chat",
     private val token: String,
     private val onMessageReceived: (Message) -> Unit,
     private val onConnectionStateChanged: (Boolean) -> Unit,

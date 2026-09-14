@@ -49,7 +49,7 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
     fun connectWithToken(
         token: String,
         userName: String = "",
-        serverUrl: String = "ws://10.0.2.2:8080/chat"
+        serverUrl: String = "ws://192.168.1.2:8080/chat"
     ) {
 
         this.token = token

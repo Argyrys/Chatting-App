@@ -25,7 +25,7 @@ class LoginActivity : AppCompatActivity() {
     private lateinit var tvDisplayNameLabel: TextView
 
     private var isRegisterMode = false
-    private val serverUrl = "http://10.0.2.2:8080"
+    private val serverUrl = "http://192.168.1.2:8080"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

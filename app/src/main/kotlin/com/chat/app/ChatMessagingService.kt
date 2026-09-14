@@ -100,7 +100,7 @@ class ChatMessagingService : FirebaseMessagingService() {
         val body = json.trimIndent().toRequestBody("application/json".toMediaType())
 
         val request = Request.Builder()
-            .url("http://10.0.2.2:8080/fcm/token?token=$token")
+            .url("http://192.168.1.2:8080/fcm/token?token=$token")
             .post(body)
             .build()
 
